@@ -5,7 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.Message
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +16,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.dicoding.picodiploma.mycamera.CameraActivity.Companion.CAMERAX_RESULT
 import com.dicoding.picodiploma.mycamera.databinding.ActivityMainBinding
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 
 class MainActivity : AppCompatActivity() {
 
@@ -103,9 +108,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun uploadImage() {
-        Toast.makeText(this, "Fitur ini belum tersedia", Toast.LENGTH_SHORT).show()
+        currentImageUri?.let { uri  ->
+            val imageFile = uriToFile(uri, this)
+            Log.d("Image classification file", "show Image: ${imageFile.path}")
+            showLoading(true)
+
+            val requestImageFile = imageFile.asRequestBody("image/jpeg".toMediaType())
+            val multipartBody = MultipartBody.Part.createFormData(
+
+                "photo",
+                imageFile.name,
+                requestImageFile
+            )
+        }?: showToast(getString(R.string.empty_image_warning))
+
     }
 
+    private fun showLoading(isLoading: Boolean){
+        binding.progressIndicator.visibility = if(isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun showToast (message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
     companion object {
         private const val REQUIRED_PERMISSION = Manifest.permission.CAMERA
     }
